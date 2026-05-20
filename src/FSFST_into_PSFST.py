@@ -3,6 +3,11 @@
 This module provides functionality to convert a frequency-annotated finite state
 transducer (FSFST) to a probabilistically-annotated finite state transducer
 (PSFST) by normalizing frequency counts to probabilities.
+
+Type Parameters:
+    Q: State type
+    U: Input symbol type
+    V: Output value type
 """
 from typing import TypeVar, cast
 from FSFST import FSFST, outgoing_frequencies

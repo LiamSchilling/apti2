@@ -11,7 +11,7 @@ Type Parameters:
     A: Accumulator type
 """
 from dataclasses import dataclass
-from typing import TypeVar, Generic, Callable, Iterator, Mapping, Sequence
+from typing import TypeVar, Generic, Callable, Iterator, MutableMapping, Sequence
 
 Q = TypeVar('Q')
 U = TypeVar('U')
@@ -64,9 +64,9 @@ class SFST(Generic[Q, U, V]):
     state_set: set[Q]
     input_set: set[U]
     initial_state: Q
-    transitions: Mapping[tuple[Q, U], tuple[Q, V]]
+    transitions: MutableMapping[tuple[Q, U], tuple[Q, V]]
     initial_output: V
-    final_outputs: Mapping[Q, V]
+    final_outputs: MutableMapping[Q, V]
 
     def iter_outputs(self) -> Iterator[V]:
         """Iterate over all outputs in the machine.
@@ -113,6 +113,53 @@ class SFST(Generic[Q, U, V]):
             yield q, v
         for q, v in self.final_outputs.items():
             yield q, v
+
+    def iter_outgoing_from(self, q: Q) -> Iterator[V]:
+        """Iterate over all output values from outgoing edges of a given state.
+
+        Yields all output values associated with transitions leaving the given state,
+        as well as the final output of the state itself (if it exists).
+
+        Args:
+            q: The state from which to find outgoing outputs.
+
+        Yields:
+            Each output value V from transitions leaving the state and the final output of the state.
+        """
+        for c in self.input_set:
+            if (q, c) in self.transitions:
+                _, v = self.transitions[(q, c)]
+                yield v
+        if q in self.final_outputs:
+            yield self.final_outputs[q]
+
+    def iter_accessible_states_from(self, q: Q, ignore: set[Q]) -> Iterator[Q]:
+        """Iterate over all states in the machine accessible from some start state.
+
+        Performs a depth-first search over the machine,
+        and yields a state only once all of its children have been processed.
+        For acyclic machines, this guarantees that states are yielded in a reverse
+        topological order.
+
+        Args:
+            q: The starting state from which to find accessible states.
+            ignore: A set of states to ignore during traversal; used to track visited states
+                    and prevent infinite loops when processing cyclic paths.
+
+        Yields:
+            Each state in the machine that is accessible from the given state.
+        """
+        if q in ignore:
+            return
+        ignore.add(q)
+
+        for c in self.input_set:
+            if (q, c) in self.transitions:
+                q_, _ = self.transitions[(q, c)]
+                yield from self.iter_accessible_states_from(q_, ignore)
+
+        ignore.remove(q)
+        yield q
 
 
 def assert_SFST(fst: SFST[Q, U, V]) -> None:
@@ -175,11 +222,11 @@ def run_from(
     """
     a = init
     for c in u:
-        try:
+        if (q, c) in fst.transitions:
             q, v = fst.transitions[(q, c)]
-        except KeyError:
+            a = acc(a, v)
+        else:
             return None
-        a = acc(a, v)
     return q, a
 
 
@@ -217,9 +264,7 @@ def run(
         case None:
             return None
         case q, a:
-            try:
-                v = fst.final_outputs[q]
-            except KeyError:
+            if q in fst.final_outputs:
+                return q, acc(a, fst.final_outputs[q])
+            else:
                 return None
-            a = acc(a, v)
-            return q, a
