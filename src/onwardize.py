@@ -8,6 +8,7 @@ Type Parameters:
     Q: State type
     U: Input symbol type
     V: Output value type
+    T: Result of LCP type
 """
 from typing import TypeVar, Callable
 from SFST import SFST
@@ -15,14 +16,15 @@ from SFST import SFST
 Q = TypeVar('Q')
 U = TypeVar('U')
 V = TypeVar('V')
+T = TypeVar('T')
 
 
 def push_forward(
     fst: SFST[Q, U, V],
     q: Q,
-    pref: V,
-    mul: Callable[[V, V], V],
-    ldiv: Callable[[V, V], V]
+    pref: T,
+    rmul: Callable[[V, T], V],
+    ldiv: Callable[[T, V], V]
 ) -> None:
     """Push a prefix forward from a state through the FST.
 
@@ -38,11 +40,11 @@ def push_forward(
         ldiv: Binary left division to remove prefix from outputs.
     """
     if q == fst.initial_state:
-        fst.initial_output = mul(fst.initial_output, pref)
+        fst.initial_output = rmul(fst.initial_output, pref)
 
     for key, (q_, v) in fst.transitions.items():
         if q == q_:
-            fst.transitions[key] = q_, mul(v, pref)
+            fst.transitions[key] = q_, rmul(v, pref)
 
     for c in fst.input_set:
         if (q, c) in fst.transitions:
@@ -56,9 +58,9 @@ def push_forward(
 
 def onwardize_trim_acyclic(
     fst: SFST[Q, U, V],
-    mul: Callable[[V, V], V],
-    ldiv: Callable[[V, V], V],
-    lcp: Callable[[set[V]], V]
+    rmul: Callable[[V, T], V],
+    ldiv: Callable[[T, V], V],
+    lcp: Callable[[set[V]], T]
 ) -> None:
     """Onwardize a trim, acyclic SFST by pushing outputs forward through states.
 
@@ -77,4 +79,4 @@ def onwardize_trim_acyclic(
     """
     for q in fst.iter_accessible_states_from(fst.initial_state, set()):
         pref = lcp(set(fst.iter_outgoing_from(q)))
-        push_forward(fst, q, pref, mul, ldiv)
+        push_forward(fst, q, pref, rmul, ldiv)
