@@ -1,11 +1,3 @@
-# APTI2 - Inference of Probabilistic Subsequential FSTs
+# State Merging Inference Algorithms
 
-A development of the APTI2 algorithm of [Akram and de la Higuera (2013)](https://www.scitepress.org/PublishedPapers/2013/43599/).
-
-## Roadmap
-
-- [x] Define frequency and probabilistic SFSTs
-- [x] Build a frequency PTT from given data
-- [ ] Implement OSTIA-style state merging using the Hoeffding test for compatibility
-- [ ] Implement the iterative merging procedure
-- [x] Convert a frequency SFST to a probabilistic SFST
+A generic implementation of state-merging inference algorithms for finite-state automata and transducers, which specializes to known such algorithms including RPNI, ALERGIA, OSTIA, and APTI2.
