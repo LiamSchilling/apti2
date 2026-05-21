@@ -13,7 +13,7 @@ Type Parameters:
     D: Output component of data pair type
 """
 from typing import TypeVar, Callable, Collection, Iterator, Sequence
-from SFST import SFST
+from FSTs.SFST import SFST
 
 Q = TypeVar('Q')
 U = TypeVar('U')

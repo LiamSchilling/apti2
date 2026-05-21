@@ -7,7 +7,7 @@ Type Parameters:
     T: Remainder after unification type
 """
 from typing import TypeVar, TypeAlias, cast, Callable, Iterator
-from SFST import SFST
+from FSTs.SFST import SFST
 from push_output import push_backward
 
 Q = TypeVar('Q')

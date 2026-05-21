@@ -10,8 +10,8 @@ Type Parameters:
     V: Output value type
 """
 from typing import TypeVar, cast
-from FSFST import FSFST, outgoing_frequencies
-from PSFST import PSFST
+from FSTs.FSFST import FSFST, outgoing_frequencies
+from FSTs.PSFST import PSFST
 
 Q = TypeVar('Q')
 U = TypeVar('U')
