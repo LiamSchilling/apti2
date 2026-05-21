@@ -105,11 +105,11 @@ def learn_by_state_merging(
         print(f"onwardized PTT:\n{fst}\n")
 
     def try_merge(fst_: SFST[Q, U, V], src: Edge[Q, U, V], q_dest: Q) -> bool:
-        if not merge(fst_, src, q_dest, lmul, rdiv, try_unify, is_epsilon):
+        if not merge(fst_, src, q_dest, lmul, rdiv, try_unify, is_epsilon, verbose=verbose):
             return False
         return check_merge(fst_)
 
-    fst = iterate_merge(fst, try_merge, choose_transition, search_iter)
+    fst = iterate_merge(fst, try_merge, choose_transition, search_iter, verbose=verbose)
 
     if verbose:
         print(f"FST after state-merging:\n{fst}\n")

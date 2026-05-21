@@ -36,7 +36,7 @@ def rpni(
     choose_transition: Callable[[DFA[Q, U], set[Edge[Q, U, None]]], Edge[Q, U, None]],
     search_iter: Callable[[DFA[Q, U], set[Q]], Iterator[Q]],
     state_supply: Iterator[Q],
-    verbose: bool = True
+    verbose: bool = False
 ) -> DFA[Q, U]:
     """Learn a DFA from positive and negative examples using RPNI.
 

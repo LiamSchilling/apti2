@@ -32,6 +32,7 @@ def fold_merge(
     rdiv: Callable[[V, T], V],
     try_unify: Callable[[V, V], tuple[V, T, T] | None],
     is_epsilon: Callable[[T], bool],
+    verbose : bool = False
 ) -> bool:
     """Recursively merge state q_src into state q_dest, consolidating transitions and final outputs.
 
@@ -49,6 +50,7 @@ def fold_merge(
         try_unify: Unification function taking two output values. Returns None on conflict,
                    or a tuple (unified_value, src_remainder, dest_remainder) on success.
         is_epsilon: Predicate checking if a remainder is epsilon (empty/identity element).
+        verbose: Flag for printing debugging information.
 
     Returns:
         True if the merge succeeds, False if unification conflicts occur or non-epsilon
@@ -61,9 +63,12 @@ def fold_merge(
            Moves q_src transitions to q_dest; unifies conflicting transitions and recursively
            merges their target states after pushing remainders backward.
     """
+    if verbose:
+        print(f"attempting to merge state {q_src} into state {q_dest}")
+
     if q_src in fst.final_outputs:
+        v_src = fst.final_outputs[q_src]
         if q_dest in fst.final_outputs:
-            v_src = fst.final_outputs[q_src]
             v_dest = fst.final_outputs[q_dest]
             match try_unify(v_src, v_dest):
                 case None:
@@ -73,14 +78,14 @@ def fold_merge(
                         return False
                     fst.final_outputs[q_dest] = v_uni
         else:
-            fst.final_outputs[q_dest] = fst.final_outputs[q_src]
+            fst.final_outputs[q_dest] = v_src
 
         del fst.final_outputs[q_src]
 
     for c in fst.input_set:
         if (q_src, c) in fst.transitions:
+            q_src_, v_src = fst.transitions[(q_src, c)]
             if (q_dest, c) in fst.transitions:
-                q_src_, v_src = fst.transitions[(q_src, c)]
                 q_dest_, v_dest = fst.transitions[(q_dest, c)]
                 match try_unify(v_src, v_dest):
                     case None:
@@ -89,10 +94,21 @@ def fold_merge(
                         push_backward(fst, q_src_, src_remainder, lmul, rdiv)
                         push_backward(fst, q_dest_, dest_remainder, lmul, rdiv)
                         fst.transitions[(q_dest, c)] = q_dest_, v_uni
-                        if not fold_merge(fst, q_src_, q_dest_, lmul, rdiv, try_unify, is_epsilon):
+                        if not fold_merge(
+                            fst,
+                            q_src_,
+                            q_dest_,
+                            lmul,
+                            rdiv,
+                            try_unify,
+                            is_epsilon,
+                            verbose=verbose,
+                        ):
                             return False
             else:
-                fst.transitions[(q_dest, c)] = fst.transitions[(q_src, c)]
+                if verbose:
+                    print(f"directing state {q_dest} on input {c} to state {q_src_}")
+                fst.transitions[(q_dest, c)] = q_src_, v_src
 
             del fst.transitions[(q_src, c)]
 
@@ -108,7 +124,8 @@ def merge(
     lmul: Callable[[T, V], V],
     rdiv: Callable[[V, T], V],
     try_unify: Callable[[V, V], tuple[V, T, T] | None],
-    is_epsilon: Callable[[T], bool]
+    is_epsilon: Callable[[T], bool],
+    verbose : bool = False
 ) -> bool:
     """Entry point for merging that prepares an edge and delegates to fold_merge.
 
@@ -125,6 +142,7 @@ def merge(
         rdiv: Right divide function (passed to fold_merge).
         try_unify: Unification function (passed to fold_merge).
         is_epsilon: Epsilon check predicate (passed to fold_merge).
+        verbose: Flag for printing debugging information.
 
     Returns:
         True if the merge succeeds (see fold_merge), False otherwise.
@@ -139,18 +157,28 @@ def merge(
 
     match key:
         case None:
+            if verbose:
+                print(f"redirecting initial transition to state {q_dest}")
             fst.initial_state, fst.initial_output = q_dest, v
         case q_src, c:
+            if verbose:
+                print(f"redirecting state {q_src} on input {c} to state {q_dest}")
             fst.transitions[(q_src, c)] = q_dest, v
 
-    return fold_merge(fst, q_src_, q_dest, lmul, rdiv, try_unify, is_epsilon)
+    success = fold_merge(fst, q_src_, q_dest, lmul, rdiv, try_unify, is_epsilon, verbose=verbose)
+
+    if success and verbose:
+        print("finished merges, maybe pending final validation")
+
+    return success
 
 
 def iterate_merge(
     fst: SFST[Q, U, V],
     try_merge: Callable[[SFST[Q, U, V], Edge[Q, U, V], Q], bool],
     choose_transition: Callable[[SFST[Q, U, V], set[Edge[Q, U, V]]], Edge[Q, U, V]],
-    search_iter: Callable[[SFST[Q, U, V], set[Q]], Iterator[Q]]
+    search_iter: Callable[[SFST[Q, U, V], set[Q]], Iterator[Q]],
+    verbose : bool = False
 ) -> SFST[Q, U, V]:
     """Iteratively merge states in an FST using customizable selection and search strategies.
 
@@ -164,6 +192,7 @@ def iterate_merge(
         choose_transition: Function that selects a transition from the frontier set.
         search_iter: Function that yields candidate states from the promoted set to try merging
                      with.
+        verbose: Flag for printing debugging information.
 
     Returns:
         A new SFST with states merged. The original FST is not modified.
@@ -178,10 +207,16 @@ def iterate_merge(
         success = False
         for q_dest in search_iter(fst, promoted):
             fst_ = copy(fst)
+            if verbose:
+                print(f"merge candidate: {q_src} into {q_dest}")
             if try_merge(fst_, src, q_dest):
+                if verbose:
+                    print("success\n")
                 fst = fst_
                 success = True
                 break
+            if verbose:
+                print("failure\n")
 
         if not success:
             promoted.add(q_src)
