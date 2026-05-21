@@ -7,6 +7,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from itertools import count
+from automata.DFA import assert_DFA
 from algorithms.rpni import rpni
 
 
@@ -32,7 +33,7 @@ neg_dataset: list[list[int]] = [
 
 
 if __name__ == "__main__":
-    rpni(
+    dfa = rpni(
         input_set=input_set,
         pos_dataset=pos_dataset,
         neg_dataset=neg_dataset,
@@ -41,3 +42,5 @@ if __name__ == "__main__":
         state_supply=count(),
         verbose=True
     )
+
+    assert_DFA(dfa)

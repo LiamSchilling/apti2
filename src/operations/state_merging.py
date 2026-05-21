@@ -75,7 +75,7 @@ def fold_merge(
         else:
             fst.final_outputs[q_dest] = fst.final_outputs[q_src]
 
-        fst.final_outputs.pop(q_src)
+        del fst.final_outputs[q_src]
 
     for c in fst.input_set:
         if (q_src, c) in fst.transitions:
@@ -94,7 +94,7 @@ def fold_merge(
             else:
                 fst.transitions[(q_dest, c)] = fst.transitions[(q_src, c)]
 
-            fst.transitions.pop((q_src, c))
+            del fst.transitions[(q_src, c)]
 
     fst.state_set.remove(q_src)
 

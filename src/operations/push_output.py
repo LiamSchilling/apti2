@@ -2,8 +2,7 @@
 
 This module provides functions to normalize output distributions in FSTs by
 pushing outputs forward or backward through states. These operations redistribute
-output values while preserving the transduction semantics, useful for weight
-normalization and lattice optimization.
+output values while preserving the transduction semantics.
 
 Type Parameters:
     Q: State type
@@ -24,8 +23,8 @@ def push_outputs(
     fst: SFST[Q, U, V],
     q: Q,
     elem: T,
-    rop: Callable[[V, T], V],
-    lop: Callable[[T, V], V]
+    lop: Callable[[T, V], V],
+    rop: Callable[[V, T], V]
 ) -> None:
     """Redistribute an element through a state by updating all incident transitions.
 
@@ -37,8 +36,8 @@ def push_outputs(
         fst: The SFST to modify (modified in-place).
         q: The state through which to push the element.
         elem: The element to push through (typically an output semiring value).
-        rop: Right operation to apply to incoming transitions: rop(output, elem).
         lop: Left operation to apply to outgoing transitions: lop(elem, output).
+        rop: Right operation to apply to incoming transitions: rop(output, elem).
     """
     if q == fst.initial_state:
         fst.initial_output = rop(fst.initial_output, elem)
@@ -75,7 +74,7 @@ def push_forward(
         mul: Binary multiplication operation to combine prefix with outputs.
         ldiv: Binary left division to remove prefix from outputs.
     """
-    push_outputs(fst, q, pref, rmul, ldiv)
+    push_outputs(fst, q, pref, ldiv, rmul)
 
 
 def push_backward(
@@ -98,4 +97,4 @@ def push_backward(
         lmul: Binary left multiplication to combine suffix with outputs.
         rdiv: Binary right division to remove suffix from outputs.
     """
-    push_outputs(fst, q, suff, rdiv, lmul)
+    push_outputs(fst, q, suff, lmul, rdiv)

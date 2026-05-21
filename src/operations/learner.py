@@ -59,16 +59,16 @@ def learn_by_state_merging(
         input_set: The set of possible input symbols.
         dataset: Collection of (input_sequence, output_data) pairs to learn from.
         epsilon: Identity element for output values (acts as the empty output).
-        incr: Increment function called when revisiting a state with new data.
+        incr: Increment function called when revisiting a transition with new data.
         insertion: Function converting output data to output values on first visit.
         contribute: Function combining an accumulated value with new data at final states.
         lmul: Left multiply - applies remainder to left of output value.
-        rmul: Right multiply - applies output to right of remainder.
+        rmul: Right multiply - applies remainder to right of output value.
         ldiv: Left divide - removes remainder from left of output value.
         rdiv: Right divide - removes remainder from right of output value.
-        lcp: Longest common prefix function to find shared structure in outputs.
+        lcp: Longest common prefix function for outputs.
         try_unify: Attempts to unify two output values, returning unified value and
-                   remainders, or None on conflict.
+                   remainder suffixes, or None on conflict.
         is_epsilon: Predicate to check if a value is epsilon.
         check_merge: Validation function that checks if a tentative merge should be accepted.
                      Called after merge succeeds; returns True to accept, False to reject.
@@ -89,7 +89,7 @@ def learn_by_state_merging(
     """
     if verbose:
         print(
-            f"learning from the following data by state-merging: [\n\t" +
+            f"learning from the following positive data by state-merging: [\n\t" +
             "\n\t".join(f"{u}, {d}" for u, d in dataset) +
             "\n]\n"
         )

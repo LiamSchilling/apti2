@@ -1,8 +1,8 @@
 """Subsequential Finite State Transducer implementation.
 
-This module provides a generic framework for symbolic finite state transducers,
+This module provides a generic framework for subsequential finite state transducers,
 which are automata that transform input sequences into output sequences by
-transitioning through states and accumulating outputs.
+transitioning through states and accumulating outputs along transitions.
 
 Type Parameters:
     Q: State type
@@ -45,7 +45,7 @@ class SFST(Generic[Q, U, V]):
         - All inputs refered to in the machine are elements of `input_set`.
 
     Example:
-        >>> # Create a simple transducer that counts inputs
+        >>> # Create a simple transducer
         >>> # Type parameters: Q=int, U=str, V=int
         >>> fst = SFST(
         ...     state_set={0, 1, 2},
@@ -125,7 +125,7 @@ class SFST(Generic[Q, U, V]):
             yield q, v
 
     def iter_outgoing_states_from(self, q: Q) -> Iterator[tuple[U, Q, V]]:
-        """Iterate over all outgoing states and outputs from a given state.
+        """Iterate over all outgoing neighbors and outputs from a given state.
 
         Yields all (input_symbol, next_state, output) tuples for transitions leaving the given state.
         For each input symbol, checks if a transition exists from the state, and yields

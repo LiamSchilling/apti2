@@ -51,8 +51,8 @@ def FSFST_into_PSFST(fst: FSFST[Q, U, V]) -> PSFST[Q, U, V]:
     }
 
     return cast(PSFST[Q, U, V], PSFST(
-        state_set=fst.state_set,
-        input_set=fst.input_set,
+        state_set=set(fst.state_set),
+        input_set=set(fst.input_set),
         initial_state=fst.initial_state,
         transitions=new_transitions,
         initial_output=new_initial_output,

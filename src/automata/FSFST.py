@@ -69,7 +69,7 @@ Invariants (in addition to SFST invariants):
       - Plus the frequency component of `final_outputs[q]`.
 
 Example:
-    >>> # Create a frequency transducer counting symbol occurrences
+    >>> # Create a frequency transducer
     >>> # Type parameters: Q=int, U=str, V=str
     >>> fsfst = FSFST(
     ...     state_set={0, 1},
