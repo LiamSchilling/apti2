@@ -12,48 +12,12 @@ Type Parameters:
 """
 from typing import TypeVar, Callable
 from SFST import SFST
+from push_output import push_forward
 
 Q = TypeVar('Q')
 U = TypeVar('U')
 V = TypeVar('V')
 T = TypeVar('T')
-
-
-def push_forward(
-    fst: SFST[Q, U, V],
-    q: Q,
-    pref: T,
-    rmul: Callable[[V, T], V],
-    ldiv: Callable[[T, V], V]
-) -> None:
-    """Push a prefix forward from a state through the FST.
-
-    This operation normalizes output distribution at state q by moving a common prefix
-    from outgoing edges to incoming edges. The prefix is multiplied onto transitions
-    entering q and left-divided from transitions leaving q, preserving the transduction.
-
-    Args:
-        fst: The SFST to modify (modified in-place).
-        q: The state at which to apply push-forward.
-        pref: The prefix to push forward (typically the LCP of outgoing outputs).
-        mul: Binary multiplication operation to combine prefix with outputs.
-        ldiv: Binary left division to remove prefix from outputs.
-    """
-    if q == fst.initial_state:
-        fst.initial_output = rmul(fst.initial_output, pref)
-
-    for key, (q_, v) in fst.transitions.items():
-        if q == q_:
-            fst.transitions[key] = q_, rmul(v, pref)
-
-    for c in fst.input_set:
-        if (q, c) in fst.transitions:
-            q_, v = fst.transitions[(q, c)]
-            fst.transitions[(q, c)] = q_, ldiv(pref, v)
-
-    if q in fst.final_outputs:
-        v = fst.final_outputs[q]
-        fst.final_outputs[q] = ldiv(pref, v)
 
 
 def onwardize_trim_acyclic(

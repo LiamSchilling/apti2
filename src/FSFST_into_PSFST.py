@@ -41,8 +41,8 @@ def FSFST_into_PSFST(fst: FSFST[Q, U, V]) -> PSFST[Q, U, V]:
     new_initial_output = v, 1.0
 
     new_transitions = {
-        (q, u): (q_, (v, f / outgoing_freqs[q]))
-        for (q, u), (q_, (v, f)) in fst.transitions.items()
+        (q, c): (q_, (v, f / outgoing_freqs[q]))
+        for (q, c), (q_, (v, f)) in fst.transitions.items()
     }
 
     new_final_outputs = {

@@ -114,6 +114,24 @@ class SFST(Generic[Q, U, V]):
         for q, v in self.final_outputs.items():
             yield q, v
 
+    def iter_outgoing_states_from(self, q: Q) -> Iterator[tuple[U, Q, V]]:
+        """Iterate over all outgoing states and outputs from a given state.
+
+        Yields all (input_symbol, next_state, output) tuples for transitions leaving the given state.
+        For each input symbol, checks if a transition exists from the state, and yields
+        the corresponding input symbol, next state, and output value.
+
+        Args:
+            q: The state from which to find outgoing transitions.
+
+        Yields:
+            Tuples of (input_symbol, next_state, output) for each transition leaving the state.
+        """
+        for c in self.input_set:
+            if (q, c) in self.transitions:
+                q_, v = self.transitions[(q, c)]
+                yield c, q_, v
+
     def iter_outgoing_from(self, q: Q) -> Iterator[V]:
         """Iterate over all output values from outgoing edges of a given state.
 
@@ -126,10 +144,8 @@ class SFST(Generic[Q, U, V]):
         Yields:
             Each output value V from transitions leaving the state and the final output of the state.
         """
-        for c in self.input_set:
-            if (q, c) in self.transitions:
-                _, v = self.transitions[(q, c)]
-                yield v
+        for _, _, v in self.iter_outgoing_states_from(q):
+            yield v
         if q in self.final_outputs:
             yield self.final_outputs[q]
 
@@ -152,12 +168,8 @@ class SFST(Generic[Q, U, V]):
         if q in ignore:
             return
         ignore.add(q)
-
-        for c in self.input_set:
-            if (q, c) in self.transitions:
-                q_, _ = self.transitions[(q, c)]
-                yield from self.iter_accessible_states_from(q_, ignore)
-
+        for _, q_, _ in self.iter_outgoing_states_from(q):
+            yield from self.iter_accessible_states_from(q_, ignore)
         ignore.remove(q)
         yield q
 
