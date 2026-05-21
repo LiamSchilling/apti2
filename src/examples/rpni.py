@@ -1,6 +1,11 @@
 """Demonstration of the RPNI algorithm learning the language of bit strings with an even number of
 0s and an odd number of 1s.
 """
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
 from itertools import count
 from algorithms.rpni import rpni
 
