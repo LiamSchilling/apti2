@@ -10,7 +10,7 @@ Type Parameters:
     A: Accumulator type
 """
 from typing import TypeAlias, TypeVar, Callable, Mapping
-from SFST import SFST, assert_SFST
+from automata.SFST import SFST, assert_SFST
 
 Q = TypeVar('Q')
 U = TypeVar('U')
@@ -45,7 +45,7 @@ def assert_WithFreq(vf: WithFreq[V]) -> None:
         f"frequency {f} is negative"
 
 
-FSFST = SFST[Q, U, WithFreq[V]]
+FSFST: TypeAlias = SFST[Q, U, WithFreq[V]]
 """Frequency Sequential Finite State Transducer.
 
 A specialization of SFST where output values use the WithFreq type annotation,

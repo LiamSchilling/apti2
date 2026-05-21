@@ -68,6 +68,16 @@ class SFST(Generic[Q, U, V]):
     initial_output: V
     final_outputs: MutableMapping[Q, V]
 
+    def __copy__(self):
+        return SFST(
+            state_set=set(self.state_set),
+            input_set=set(self.input_set),
+            initial_state=self.initial_state,
+            transitions=dict(self.transitions),
+            initial_output=self.initial_output,
+            final_outputs=dict(self.final_outputs)
+        )
+
     def iter_outputs(self) -> Iterator[V]:
         """Iterate over all outputs in the machine.
 

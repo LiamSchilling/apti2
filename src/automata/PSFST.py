@@ -10,7 +10,7 @@ Type Parameters:
     A: Accumulator type
 """
 from typing import TypeAlias, TypeVar, Callable, Mapping
-from SFST import SFST, assert_SFST
+from automata.SFST import SFST, assert_SFST
 
 Q = TypeVar('Q')
 U = TypeVar('U')
@@ -45,7 +45,7 @@ def assert_WithProb(vp: WithProb[V]) -> None:
         f"probability {p} is not in the range [0.0, 1.0]"
 
 
-PSFST = SFST[Q, U, WithProb[V]]
+PSFST: TypeAlias = SFST[Q, U, WithProb[V]]
 """Probabilistic Sequential Finite State Transducer.
 
 A specialization of SFST where output values use the WithProb type annotation,

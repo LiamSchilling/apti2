@@ -12,7 +12,7 @@ Type Parameters:
     T: Result of LCP type
 """
 from typing import TypeVar, Callable
-from FSTs.SFST import SFST
+from automata.SFST import SFST
 
 Q = TypeVar('Q')
 U = TypeVar('U')

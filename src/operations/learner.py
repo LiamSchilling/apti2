@@ -15,10 +15,10 @@ Type Parameters:
     T: Result of LCP type
 """
 from typing import TypeVar, Callable, Collection, Iterator, Sequence
-from FSTs.SFST import SFST
-from build_PTT import build_PTT
-from onwardize import onwardize_trim_acyclic
-from state_merging import Edge, merge, iterate_merge
+from automata.SFST import SFST
+from operations.build_PTT import build_PTT
+from operations.onwardize import onwardize_trim_acyclic
+from operations.state_merging import Edge, merge, iterate_merge
 
 Q = TypeVar('Q')
 U = TypeVar('U')
@@ -42,6 +42,7 @@ def learn_by_state_merging(
     lcp: Callable[[set[V]], T],
     try_unify: Callable[[V, V], tuple[V, T, T] | None],
     is_epsilon: Callable[[T], bool],
+    check_merge: Callable[[SFST[Q, U, V]], bool],
     choose_transition: Callable[[SFST[Q, U, V], set[Edge[Q, U, V]]], Edge[Q, U, V]],
     search_iter: Callable[[SFST[Q, U, V], set[Q]], Iterator[Q]],
     state_supply: Iterator[Q],
@@ -69,10 +70,13 @@ def learn_by_state_merging(
         try_unify: Attempts to unify two output values, returning unified value and
                    remainders, or None on conflict.
         is_epsilon: Predicate to check if a value is epsilon.
+        check_merge: Validation function that checks if a tentative merge should be accepted.
+                     Called after merge succeeds; returns True to accept, False to reject.
         choose_transition: Heuristic selecting which transition to process from the frontier.
         search_iter: Heuristic yielding candidate states to try merging with.
         state_supply: Iterator providing fresh state identifiers as needed.
         postprocess: Function to transform final transducer (e.g., normalize outputs).
+        verbose: Whether to print progress information during learning.
 
     Returns:
         A learned SFST of type SFST[Q, U, V_].
@@ -85,9 +89,9 @@ def learn_by_state_merging(
     """
     if verbose:
         print(
-            f"learning from the following data by state-merging:\n\t" +
+            f"learning from the following data by state-merging: [\n\t" +
             "\n\t".join(f"{u}, {d}" for u, d in dataset) +
-            "\n"
+            "\n]\n"
         )
 
     fst = build_PTT(input_set, dataset, epsilon, incr, insertion, contribute, state_supply)
@@ -101,9 +105,11 @@ def learn_by_state_merging(
         print(f"onwardized PTT:\n{fst}\n")
 
     def try_merge(fst_: SFST[Q, U, V], src: Edge[Q, U, V], q_dest: Q) -> bool:
-        return merge(fst_, src, q_dest, lmul, rdiv, try_unify, is_epsilon)
+        if not merge(fst_, src, q_dest, lmul, rdiv, try_unify, is_epsilon):
+            return False
+        return check_merge(fst_)
 
-    iterate_merge(fst, try_merge, choose_transition, search_iter)
+    fst = iterate_merge(fst, try_merge, choose_transition, search_iter)
 
     if verbose:
         print(f"FST after state-merging:\n{fst}\n")
@@ -111,6 +117,6 @@ def learn_by_state_merging(
     fst = postprocess(fst)
 
     if verbose:
-        print(f"result FST of learning algorithm:\n{fst}\n")
+        print(f"result FST of learning algorithm:\n{fst}")
 
     return fst

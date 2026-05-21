@@ -1,4 +1,8 @@
-"""TODO
+"""State merging operations for finite-state transducers.
+
+This module provides the core state merging functionality used in learning algorithms
+like RPNI, ALERGIA, OSTIA, and APTI2. It includes recursive merging of individual states
+and an iterative framework for repeatedly merging states based on customizable strategies.
 
 Type Parameters:
     Q: State type
@@ -6,9 +10,10 @@ Type Parameters:
     V: Output value type
     T: Remainder after unification type
 """
-from typing import TypeVar, TypeAlias, cast, Callable, Iterator
-from FSTs.SFST import SFST
-from push_output import push_backward
+from typing import TypeAlias, TypeVar, cast, Callable, Iterator
+from copy import copy
+from automata.SFST import SFST
+from operations.push_output import push_backward
 
 Q = TypeVar('Q')
 U = TypeVar('U')
@@ -146,19 +151,22 @@ def iterate_merge(
     try_merge: Callable[[SFST[Q, U, V], Edge[Q, U, V], Q], bool],
     choose_transition: Callable[[SFST[Q, U, V], set[Edge[Q, U, V]]], Edge[Q, U, V]],
     search_iter: Callable[[SFST[Q, U, V], set[Q]], Iterator[Q]]
-) -> None:
+) -> SFST[Q, U, V]:
     """Iteratively merge states in an FST using customizable selection and search strategies.
 
     This forms the outer loop of state merging algorithms like RPNI, ALERGIA, OSTIA, and APTI2.
 
     Args:
-        fst: The finite-state transducer to modify.
+        fst: The finite-state transducer to merge.
         try_merge: Function that attempts to merge the target state of the given transition into the
                    given state. That is, on a successful merge, the joined state should have the
                    name of the given *state*, the *second* argument. Returns True if merge succeeds.
         choose_transition: Function that selects a transition from the frontier set.
         search_iter: Function that yields candidate states from the promoted set to try merging
                      with.
+
+    Returns:
+        A new SFST with states merged. The original FST is not modified.
     """
     promoted = cast(set[Q], set())
     frontier = {(cast(EdgeKey[Q, U], None), (fst.initial_state, fst.initial_output))}
@@ -169,7 +177,9 @@ def iterate_merge(
 
         success = False
         for q_dest in search_iter(fst, promoted):
-            if try_merge(fst, src, q_dest):
+            fst_ = copy(fst)
+            if try_merge(fst_, src, q_dest):
+                fst = fst_
                 success = True
                 break
 
@@ -182,3 +192,5 @@ def iterate_merge(
             for c, q_, v in fst.iter_outgoing_states_from(q)
             if q_ not in promoted
         }
+
+    return fst
