@@ -38,12 +38,11 @@ def learn_by_state_merging(
     lmul: Callable[[T, V], V],
     rmul: Callable[[V, T], V],
     ldiv: Callable[[T, V], V],
-    rdiv: Callable[[V, T], V],
-    lcp: Callable[[set[V]], T],
-    try_unify: Callable[[V, V], tuple[V, T, T] | None],
+    lcp: Callable[[Collection[V]], T],
+    try_unify: Callable[[V, V], tuple[V, T] | None],
     is_epsilon: Callable[[T], bool],
     check_merge: Callable[[SFST[Q, U, V]], bool],
-    choose_transition: Callable[[SFST[Q, U, V], set[Edge[Q, U, V]]], Edge[Q, U, V]],
+    choose_transition: Callable[[SFST[Q, U, V], set[Edge[Q, U]]], Edge[Q, U]],
     search_iter: Callable[[SFST[Q, U, V], set[Q]], Iterator[Q]],
     state_supply: Iterator[Q],
     postprocess: Callable[[SFST[Q, U, V]], SFST[Q, U, V_]],
@@ -65,7 +64,6 @@ def learn_by_state_merging(
         lmul: Left multiply - applies remainder to left of output value.
         rmul: Right multiply - applies remainder to right of output value.
         ldiv: Left divide - removes remainder from left of output value.
-        rdiv: Right divide - removes remainder from right of output value.
         lcp: Longest common prefix function for outputs.
         try_unify: Attempts to unify two output values, returning unified value and
                    remainder suffixes, or None on conflict.
@@ -104,8 +102,8 @@ def learn_by_state_merging(
     if verbose:
         print(f"onwardized PTT:\n{fst}\n")
 
-    def try_merge(fst_: SFST[Q, U, V], src: Edge[Q, U, V], q_dest: Q) -> bool:
-        if not merge(fst_, src, q_dest, lmul, rdiv, try_unify, is_epsilon, verbose=verbose):
+    def try_merge(fst_: SFST[Q, U, V], src: Edge[Q, U], q_dest: Q) -> bool:
+        if not merge(fst_, src, q_dest, lmul, try_unify, is_epsilon, verbose=verbose):
             return False
         return check_merge(fst_)
 

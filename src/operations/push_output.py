@@ -19,25 +19,22 @@ V = TypeVar('V')
 T = TypeVar('T')
 
 
-def push_outputs(
+def push_ingoing(
     fst: SFST[Q, U, V],
     q: Q,
     elem: T,
-    lop: Callable[[T, V], V],
     rop: Callable[[V, T], V]
 ) -> None:
-    """Redistribute an element through a state by updating all incident transitions.
+    """Apply an operation to all incoming transitions to a state.
 
-    Modifies the FST by pushing elem through state q:
-    - Applies right-multiplication (rop) to transitions entering q and initial output
-    - Applies left-multiplication (lop) to transitions leaving q and final output
+    Modifies the output values on all transitions that end at state q by applying
+    the right operation. If q is the initial state, also modifies the initial output.
 
     Args:
         fst: The SFST to modify (modified in-place).
-        q: The state through which to push the element.
-        elem: The element to push through (typically an output semiring value).
-        lop: Left operation to apply to outgoing transitions: lop(elem, output).
-        rop: Right operation to apply to incoming transitions: rop(output, elem).
+        q: The target state.
+        elem: The element to apply to incoming transitions.
+        rop: Binary right operation to combine with transition outputs.
     """
     if q == fst.initial_state:
         fst.initial_output = rop(fst.initial_output, elem)
@@ -46,6 +43,24 @@ def push_outputs(
         if q == q_:
             fst.transitions[key] = q_, rop(v, elem)
 
+
+def push_outgoing(
+    fst: SFST[Q, U, V],
+    q: Q,
+    elem: T,
+    lop: Callable[[T, V], V]
+) -> None:
+    """Apply an operation to all outgoing transitions from a state.
+
+    Modifies the output values on all transitions that start from state q by applying
+    the left operation. If q is a final state, also modifies its final output.
+
+    Args:
+        fst: The SFST to modify (modified in-place).
+        q: The source state.
+        elem: The element to apply to outgoing transitions.
+        lop: Binary left operation to combine with transition outputs.
+    """
     for c, q_, v in fst.iter_outgoing_states_from(q):
         fst.transitions[(q, c)] = q_, lop(elem, v)
 
@@ -71,10 +86,11 @@ def push_forward(
         fst: The SFST to modify (modified in-place).
         q: The state at which to apply push-forward.
         pref: The prefix to push forward (typically the LCP of outgoing outputs).
-        mul: Binary multiplication operation to combine prefix with outputs.
+        rmul: Binary right multiplication operation to combine prefix with outputs.
         ldiv: Binary left division to remove prefix from outputs.
     """
-    push_outputs(fst, q, pref, ldiv, rmul)
+    push_ingoing(fst, q, pref, rmul)
+    push_outgoing(fst, q, pref, ldiv)
 
 
 def push_backward(
@@ -97,4 +113,5 @@ def push_backward(
         lmul: Binary left multiplication to combine suffix with outputs.
         rdiv: Binary right division to remove suffix from outputs.
     """
-    push_outputs(fst, q, suff, lmul, rdiv)
+    push_outgoing(fst, q, suff, lmul)
+    push_ingoing(fst, q, suff, rdiv)

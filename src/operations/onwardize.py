@@ -10,7 +10,7 @@ Type Parameters:
     V: Output value type
     T: Result of LCP type
 """
-from typing import TypeVar, Callable
+from typing import TypeVar, Callable, Collection
 from automata.SFST import SFST
 from operations.push_output import push_forward
 
@@ -24,7 +24,7 @@ def onwardize_trim_acyclic(
     fst: SFST[Q, U, V],
     rmul: Callable[[V, T], V],
     ldiv: Callable[[T, V], V],
-    lcp: Callable[[set[V]], T]
+    lcp: Callable[[Collection[V]], T]
 ) -> None:
     """Onwardize a trim, acyclic SFST by pushing outputs forward through states.
 
@@ -42,5 +42,5 @@ def onwardize_trim_acyclic(
              Returns the longest prefix common to all outputs in the set.
     """
     for q in fst.iter_accessible_states_from(fst.initial_state, set()):
-        pref = lcp(set(fst.iter_outgoing_from(q)))
+        pref = lcp(list(fst.iter_outgoing_from(q)))
         push_forward(fst, q, pref, rmul, ldiv)
