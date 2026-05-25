@@ -10,7 +10,7 @@ Type Parameters:
     V: Output value type
     T: Remainder after unification type
 """
-from typing import TypeAlias, TypeVar, cast, Callable, Iterator
+from typing import TypeVar, Callable, Iterator
 from copy import copy
 from automata.SFST import SFST
 from operations.push_output import push_outgoing
@@ -19,9 +19,6 @@ Q = TypeVar('Q')
 U = TypeVar('U')
 V = TypeVar('V')
 T = TypeVar('T')
-
-EdgeKey: TypeAlias = tuple[Q, U] | None
-Edge: TypeAlias = tuple[EdgeKey[Q, U], Q]
 
 
 def fold_merge(
@@ -115,8 +112,9 @@ def fold_merge(
 
 def merge(
     fst: SFST[Q, U, V],
-    src: Edge[Q, U],
+    q_src: Q,
     q_dest: Q,
+    tr_src_incoming: tuple[Q, U] | None,
     lmul: Callable[[T, V], V],
     try_unify: Callable[[V, V], tuple[V, T] | None],
     is_epsilon: Callable[[T], bool],
@@ -147,22 +145,20 @@ def merge(
            - Otherwise: updates transition (q_src, c) to target q_dest with output v.
         2. Calls fold_merge to perform the recursive merge of q_src_ into q_dest.
     """
-    key, q_src_ = src
-
-    match key:
+    match tr_src_incoming:
         case None:
             if verbose:
                 print(f"redirecting initial transition to state {q_dest}")
             fst.initial_state = q_dest
-        case q_src, c:
+        case q_src_origin, c:
             if verbose:
-                print(f"redirecting state {q_src} on input {c} to state {q_dest}")
-            _, v = fst.transitions[(q_src, c)]
-            fst.transitions[(q_src, c)] = q_dest, v
+                print(f"redirecting state {q_src_origin} on input {c} to state {q_dest}")
+            _, v = fst.transitions[(q_src_origin, c)]
+            fst.transitions[(q_src_origin, c)] = q_dest, v
 
     success = fold_merge(
         fst,
-        q_src_,
+        q_src,
         q_dest,
         lmul,
         try_unify,
@@ -178,8 +174,8 @@ def merge(
 
 def iterate_merge(
     fst: SFST[Q, U, V],
-    try_merge: Callable[[SFST[Q, U, V], Edge[Q, U], Q], bool],
-    choose_transition: Callable[[SFST[Q, U, V], set[Edge[Q, U]]], Edge[Q, U]],
+    try_merge: Callable[[SFST[Q, U, V], Q, Q, tuple[Q, U] | None], bool],
+    choose_transition: Callable[[SFST[Q, U, V], set[Q]], Q],
     search_iter: Callable[[SFST[Q, U, V], set[Q]], Iterator[Q]],
     verbose : bool = False
 ) -> SFST[Q, U, V]:
@@ -200,32 +196,31 @@ def iterate_merge(
     Returns:
         A new SFST with states merged. The original FST is not modified.
     """
-    promoted = cast(set[Q], set())
-    frontier = {(cast(EdgeKey[Q, U], None), fst.initial_state)}
+    promoted: set[Q] = set()
+    frontier: dict[Q, tuple[Q, U] | None] = {fst.initial_state : None}
 
-    while frontier != set():
-        src = choose_transition(fst, frontier)
-        _, q_src = src
+    while frontier != {}:
+        q_src = choose_transition(fst, set(frontier))
 
         success = False
         for q_dest in search_iter(fst, promoted):
             fst_ = copy(fst)
             if verbose:
                 print(f"merge candidate: {q_src} into {q_dest}")
-            if try_merge(fst_, src, q_dest):
+            if try_merge(fst_, q_src, q_dest, frontier[q_src]):
                 if verbose:
                     print("success\n")
                 fst = fst_
                 success = True
                 break
-            if verbose:
+            elif verbose:
                 print("failure\n")
 
         if not success:
             promoted.add(q_src)
 
-        frontier = {
-            (cast(EdgeKey[Q, U], (q, c)), q_)
+        frontier: dict[Q, tuple[Q, U] | None] = {
+            q_ : (q, c)
             for q in promoted
             for c, q_, _ in fst.iter_outgoing_states_from(q)
             if q_ not in promoted

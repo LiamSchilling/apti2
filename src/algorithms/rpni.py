@@ -7,7 +7,7 @@ Type Parameters:
 from typing import TypeVar, Callable, Collection, Iterator, Sequence
 from automata.DFA import DFA
 from automata.SFST import run
-from operations.learner import Edge, learn_by_state_merging
+from operations.learner import learn_by_state_merging
 
 Q = TypeVar('Q')
 U = TypeVar('U')
@@ -33,7 +33,7 @@ def rpni(
     input_set: set[U],
     pos_dataset: Collection[Sequence[U]],
     neg_dataset: Collection[Sequence[U]],
-    choose_transition: Callable[[DFA[Q, U], set[Edge[Q, U]]], Edge[Q, U]],
+    choose_transition: Callable[[DFA[Q, U], set[Q]], Q],
     search_iter: Callable[[DFA[Q, U], set[Q]], Iterator[Q]],
     state_supply: Iterator[Q],
     verbose: bool = False

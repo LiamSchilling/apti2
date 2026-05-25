@@ -8,7 +8,7 @@ Type Parameters:
 from typing import TypeVar, Callable, Collection, Iterator, Sequence
 from util import lcp, ldiv, match, unify
 from automata.SFST import SFST
-from operations.learner import Edge, learn_by_state_merging
+from operations.learner import learn_by_state_merging
 
 Q = TypeVar('Q')
 U = TypeVar('U')
@@ -20,7 +20,7 @@ def ostia(
     dataset: Collection[tuple[Sequence[U], Sequence[V]]],
     epsilon: Sequence[V],
     concat: Callable[[Sequence[V], Sequence[V]], Sequence[V]],
-    choose_transition: Callable[[SFST[Q, U, Sequence[V]], set[Edge[Q, U]]], Edge[Q, U]],
+    choose_transition: Callable[[SFST[Q, U, Sequence[V]], set[Q]], Q],
     search_iter: Callable[[SFST[Q, U, Sequence[V]], set[Q]], Iterator[Q]],
     state_supply: Iterator[Q],
     verbose: bool = False

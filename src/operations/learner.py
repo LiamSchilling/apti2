@@ -18,7 +18,7 @@ from typing import TypeVar, Callable, Collection, Iterator, Sequence
 from automata.SFST import SFST
 from operations.build_PTT import build_PTT
 from operations.onwardize import onwardize_trim_acyclic
-from operations.state_merging import Edge, merge, iterate_merge
+from operations.state_merging import merge, iterate_merge
 
 Q = TypeVar('Q')
 U = TypeVar('U')
@@ -42,7 +42,7 @@ def learn_by_state_merging(
     try_unify: Callable[[V, V], tuple[V, T] | None],
     is_epsilon: Callable[[T], bool],
     check_merge: Callable[[SFST[Q, U, V]], bool],
-    choose_transition: Callable[[SFST[Q, U, V], set[Edge[Q, U]]], Edge[Q, U]],
+    choose_transition: Callable[[SFST[Q, U, V], set[Q]], Q],
     search_iter: Callable[[SFST[Q, U, V], set[Q]], Iterator[Q]],
     state_supply: Iterator[Q],
     postprocess: Callable[[SFST[Q, U, V]], SFST[Q, U, V_]],
@@ -102,10 +102,25 @@ def learn_by_state_merging(
     if verbose:
         print(f"onwardized PTT:\n{fst}\n")
 
-    def try_merge(fst_: SFST[Q, U, V], src: Edge[Q, U], q_dest: Q) -> bool:
-        if not merge(fst_, src, q_dest, lmul, try_unify, is_epsilon, verbose=verbose):
+    def try_merge(
+        fst_: SFST[Q, U, V],
+        q_src: Q,
+        q_dest: Q,
+        tr_src_ingoing: tuple[Q, U] | None
+    ) -> bool:
+        if not merge(
+            fst_,
+            q_src,
+            q_dest,
+            tr_src_ingoing,
+            lmul,
+            try_unify,
+            is_epsilon,
+            verbose=verbose
+        ):
             return False
-        return check_merge(fst_)
+        else:
+            return check_merge(fst_)
 
     fst = iterate_merge(fst, try_merge, choose_transition, search_iter, verbose=verbose)
 
