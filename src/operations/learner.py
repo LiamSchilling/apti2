@@ -108,19 +108,25 @@ def learn_by_state_merging(
         q_dest: Q,
         tr_src_ingoing: tuple[Q, U] | None
     ) -> bool:
-        if not merge(
+        match merge(
             fst_,
             q_src,
             q_dest,
             tr_src_ingoing,
             lmul,
+            ldiv,
             try_unify,
             is_epsilon,
             verbose=verbose
         ):
-            return False
-        else:
-            return check_merge(fst_)
+            case None:
+                return False
+            case undo_merge:
+                if check_merge(fst_):
+                    return True
+                else:
+                    undo_merge()
+                    return False
 
     fst = iterate_merge(fst, try_merge, choose_transition, search_iter, verbose=verbose)
 

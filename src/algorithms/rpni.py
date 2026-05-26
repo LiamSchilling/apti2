@@ -26,7 +26,7 @@ def check_merge(dfa: DFA[Q, U], neg_dataset: Collection[Sequence[U]]) -> bool:
     Returns:
         True if the DFA rejects all negative examples, False otherwise.
     """
-    return all(run(dfa, u, None, lambda none, _ : none) == None for u in neg_dataset)
+    return all(run(dfa, u, None, lambda none, _: none) == None for u in neg_dataset)
 
 
 def rpni(
@@ -66,19 +66,19 @@ def rpni(
         input_set=input_set,
         dataset=[(u, None) for u in pos_dataset],
         epsilon=None,
-        incr=lambda none : none,
-        insertion=lambda none : none,
-        contribute=lambda none, _ : none,
-        lmul=lambda _, none : none,
-        rmul=lambda none, _ : none,
-        ldiv=lambda _, none : none,
-        lcp=lambda _ : None,
-        try_unify=lambda none, _ : (none, None),
-        is_epsilon=lambda _ : True,
-        check_merge=lambda dfa : check_merge(dfa, neg_dataset),
+        incr=lambda none: none,
+        insertion=lambda none: none,
+        contribute=lambda none, _: none,
+        lmul=lambda _, none: none,
+        rmul=lambda none, _: none,
+        ldiv=lambda _, none: none,
+        lcp=lambda _: None,
+        try_unify=lambda none, _: (none, None),
+        is_epsilon=lambda _: True,
+        check_merge=lambda dfa, neg_dataset=neg_dataset: check_merge(dfa, neg_dataset),
         choose_transition=choose_transition,
         search_iter=search_iter,
         state_supply=state_supply,
-        postprocess=lambda dfa : dfa,
+        postprocess=lambda dfa: dfa,
         verbose=verbose
     )

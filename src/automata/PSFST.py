@@ -150,4 +150,4 @@ def lift_acc_to_prob(acc: Callable[[A, V], A]) -> Callable[[WithProb[A], WithPro
         >>> result = run(psfst, ["a", "b"], ("", 1.0), lifted)
         >>> # result is (concatenated_string, path_probability)
     """
-    return lambda ap, vp: (acc(ap[0], vp[0]), ap[1] * vp[1])
+    return lambda ap, vp, acc=acc: (acc(ap[0], vp[0]), ap[1] * vp[1])

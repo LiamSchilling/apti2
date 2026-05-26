@@ -169,4 +169,4 @@ def lift_acc_to_freq(acc: Callable[[A, V], A]) -> Callable[[A, WithFreq[V]], A]:
         >>> result = run(fsfst, ["a", "b"], "", lifted)
         >>> # result extracts string values, ignoring frequencies
     """
-    return lambda a, vf: acc(a, vf[0])
+    return lambda a, vf, acc=acc: acc(a, vf[0])

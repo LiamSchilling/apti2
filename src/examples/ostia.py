@@ -8,7 +8,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from typing import cast
 from itertools import count
-from automata.SFST import assert_SFST
+from automata.SFST import run, assert_SFST
 from algorithms.ostia import ostia
 
 
@@ -40,14 +40,23 @@ if __name__ == "__main__":
         input_set=input_set,
         dataset=dataset_list,
         epsilon=[],
-        concat=lambda v1, v2 : cast(list[int], v1) + cast(list[int], v2),
-        choose_transition=lambda _, trs : next(iter(trs)),
-        search_iter=lambda _, qs : iter(qs),
+        concat=lambda v1, v2: cast(list[int], v1) + cast(list[int], v2),
+        choose_transition=lambda _, trs: next(iter(trs)),
+        search_iter=lambda _, qs: iter(qs),
         state_supply=count(),
         verbose=True
     )
 
     assert_SFST(fst)
+
+    for input, output in dataset_list:
+        match run(fst, input, cast(list[int], []), lambda v1, v2: v1 + cast(list[int], v2)):
+            case None:
+                assert False, \
+                    f"learned FST rejected positive data {input, output}"
+            case _, real_output:
+                assert real_output == output, \
+                    f"learned FST incorrectly output {real_output} on positive data {input, output}"
 
     print("\n" + "-" * 80 + "\n")
 
@@ -55,11 +64,20 @@ if __name__ == "__main__":
         input_set=input_set,
         dataset=dataset_str,
         epsilon='',
-        concat=lambda v1, v2 : cast(str, v1) + cast(str, v2),
-        choose_transition=lambda _, trs : next(iter(trs)),
-        search_iter=lambda _, qs : iter(qs),
+        concat=lambda v1, v2: cast(str, v1) + cast(str, v2),
+        choose_transition=lambda _, trs: next(iter(trs)),
+        search_iter=lambda _, qs: iter(qs),
         state_supply=count(),
         verbose=True
     )
 
     assert_SFST(fst)
+
+    for input, output in dataset_str:
+        match run(fst, input, '', lambda v1, v2: v1 + cast(str, v2)):
+            case None:
+                assert False, \
+                    f"learned FST rejected positive data {input, output}"
+            case _, real_output:
+                assert real_output == output, \
+                    f"learned FST incorrectly output {real_output} on positive data {input, output}"
