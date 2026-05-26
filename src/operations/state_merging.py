@@ -96,13 +96,16 @@ def fold_merge(
                     if not is_epsilon(src_remainder):
                         return _run_all_rev(undo_ops)
                     fst.final_outputs[q_dest] = v_uni
-                    undo_ops.append(lambda fst=fst, q=q_dest, v=v_dest: fst.final_outputs.update({q: v}))
+                    undo_ops.append(lambda fst=fst, q=q_dest, v=v_dest:
+                                    fst.final_outputs.update({q: v}))
         else:
             fst.final_outputs[q_dest] = v_src
-            undo_ops.append(lambda fst=fst, q=q_dest: (fst.final_outputs.pop(q, None), None)[1])
+            undo_ops.append(lambda fst=fst, q=q_dest:
+                            (fst.final_outputs.pop(q, None), None)[1])
 
         del fst.final_outputs[q_src]
-        undo_ops.append(lambda fst=fst, q=q_src, v=v_src: fst.final_outputs.update({q: v}))
+        undo_ops.append(lambda fst=fst, q=q_src, v=v_src:
+                        fst.final_outputs.update({q: v}))
 
     for c in fst.input_set:
         if (q_src, c) in fst.transitions:
@@ -114,9 +117,11 @@ def fold_merge(
                         return _run_all_rev(undo_ops)
                     case v_uni, src_remainder:
                         push_outgoing(fst, q_src_, src_remainder, lmul)
-                        undo_ops.append(lambda fst=fst, ldiv=ldiv, q_=q_src_, r=src_remainder: push_outgoing(fst, q_, r, ldiv))
+                        undo_ops.append(lambda fst=fst, ldiv=ldiv, q_=q_src_, r=src_remainder:
+                                        push_outgoing(fst, q_, r, ldiv))
                         fst.transitions[(q_dest, c)] = q_dest_, v_uni
-                        undo_ops.append(lambda fst=fst, q=q_dest, c=c, q_=q_dest_, v=v_dest: fst.transitions.update({(q, c): (q_, v)}))
+                        undo_ops.append(lambda fst=fst, q=q_dest, c=c, q_=q_dest_, v=v_dest:
+                                        fst.transitions.update({(q, c): (q_, v)}))
                         match fold_merge(
                             fst,
                             q_src_,
@@ -135,13 +140,16 @@ def fold_merge(
                 if verbose:
                     print(f"directing state {q_dest} on input {c} to state {q_src_}")
                 fst.transitions[(q_dest, c)] = q_src_, v_src
-                undo_ops.append(lambda fst=fst, q=q_dest, c=c: (fst.transitions.pop((q, c), None), None)[1])
+                undo_ops.append(lambda fst=fst, q=q_dest, c=c:
+                                (fst.transitions.pop((q, c), None), None)[1])
 
             del fst.transitions[(q_src, c)]
-            undo_ops.append(lambda fst=fst, q=q_src, c=c, q_=q_src_, v=v_src: fst.transitions.update({(q, c): (q_, v)}))
+            undo_ops.append(lambda fst=fst, q=q_src, c=c, q_=q_src_, v=v_src:
+                            fst.transitions.update({(q, c): (q_, v)}))
 
     fst.state_set.remove(q_src)
-    undo_ops.append(lambda fst=fst, q=q_src: fst.state_set.add(q))
+    undo_ops.append(lambda fst=fst, q=q_src:
+                    fst.state_set.add(q))
 
     return lambda undo_ops=undo_ops: _run_all_rev(undo_ops)
 
@@ -198,13 +206,15 @@ def merge(
             if verbose:
                 print(f"redirecting initial transition to state {q_dest}")
             fst.initial_state = q_dest
-            undo_ops.append(lambda fst=fst, q_=q_src: setattr(fst, 'initial_state', q_))
+            undo_ops.append(lambda fst=fst, q_=q_src:
+                            setattr(fst, 'initial_state', q_))
         case q_src_origin, c:
             if verbose:
                 print(f"redirecting state {q_src_origin} on input {c} to state {q_dest}")
             _, v = fst.transitions[(q_src_origin, c)]
             fst.transitions[(q_src_origin, c)] = q_dest, v
-            undo_ops.append(lambda fst=fst, q=q_src_origin, c=c, q_=q_src, v=v: fst.transitions.update({(q, c): (q_, v)}))
+            undo_ops.append(lambda fst=fst, q=q_src_origin, c=c, q_=q_src, v=v:
+                            fst.transitions.update({(q, c): (q_, v)}))
 
     match fold_merge(
         fst,

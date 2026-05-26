@@ -127,8 +127,8 @@ class SFST(Generic[Q, U, V]):
     def iter_outgoing_states_from(self, q: Q) -> Iterator[tuple[U, Q, V]]:
         """Iterate over all outgoing neighbors and outputs from a given state.
 
-        Yields all (input_symbol, next_state, output) tuples for transitions leaving the given state.
-        For each input symbol, checks if a transition exists from the state, and yields
+        Yields all (input_symbol, next_state, output) tuples for transitions leaving the given
+        state. For each input symbol, checks if a transition exists from the state, and yields
         the corresponding input symbol, next state, and output value.
 
         Args:
@@ -152,7 +152,8 @@ class SFST(Generic[Q, U, V]):
             q: The state from which to find outgoing outputs.
 
         Yields:
-            Each output value V from transitions leaving the state and the final output of the state.
+            Each output value V from transitions leaving the state and the final output of the
+            state.
         """
         for _, _, v in self.iter_outgoing_states_from(q):
             yield v

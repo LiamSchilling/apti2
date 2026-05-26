@@ -39,7 +39,8 @@ def insert_data_PTT(
     Args:
         fst: The prefix tree transducer to modify (modified in-place).
         data: Tuple of (input_sequence, data_value) to insert.
-        epsilon: The identity/empty value for the output type V (used to initialize new transitions).
+        epsilon: The identity/empty value for the output type V
+                 (used to initialize new transitions).
         incr: Unary operation applied to outputs when a path is revisited.
               Used to track path frequency. Signature: V -> V
         insertion: Unary operation converting a data value into an output on first insertion.
